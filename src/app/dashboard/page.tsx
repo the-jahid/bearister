@@ -695,27 +695,19 @@ function ChatView() {
     setActiveChat(newChatId)
     const welcomeMessage: Message = {
       role: "assistant",
-      content: `**The Lighthouse Keeper's Discovery**
+     content: `Hello! I'm Defender CoPilot, your AI legal assistant focused on California criminal defense. I'm here to help you with case analysis, defense strategies, jury instructions, and practical tools to support your work defending clients.
 
-Every night for thirty years, Eleanor had climbed the spiral stairs to light the beacon at Gull's Rest Lighthouse. The routine never varied—until the night she found the bottle.
+Whether you need help with:
+- Analyzing a case for potential defenses
+- Identifying constitutional issues or motions
+- Understanding CALCRIM jury instructions
+- Developing trial strategy
+- Finding relevant California case law
+- Drafting discovery requests
 
-It had washed up on the rocky shore below, glinting in the moonlight like a fallen star. Inside was a letter written in a child's careful handwriting:
+Just let me know what you're working on. I understand the challenges of public defense work and aim to provide efficient, actionable insights that can make a real difference for your clients.
 
-*"My name is Sam. I'm 8 years old. My dad says you can see your lighthouse from our boat. He's a fisherman but he's been sick and can't work. I'm putting this letter in the ocean hoping you might see it. Do you ever feel lonely up there? I do sometimes."*
-
-Eleanor's weathered hands trembled as she read. She'd spent decades guiding ships safely home, but had never thought about the families aboard them.
-
-That very night, she wrote back: *"Dear Sam, I do see your father's boat sometimes. And yes, I do get lonely. Would you like to be pen pals?"*
-
-She sealed her letter in the same bottle and cast it out with the morning tide.
-
-For months, letters traveled back and forth with the currents. Sam wrote about school, his father's recovery, and his dreams of becoming a lighthouse keeper himself. Eleanor shared stories of storms weathered and ships guided home.
-
-One evening, a small fishing boat approached the lighthouse. A man waved from the deck, and beside him stood a boy holding a bottle up to catch the light.
-
-Eleanor smiled and flashed the beacon three times—their secret signal.
-
-Sometimes the most important ships you guide home carry friendship aboard.`,
+What case or legal issue can I help you with today?`,
       timestamp: new Date().toISOString(),
     }
     setMessages([welcomeMessage])
