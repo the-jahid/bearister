@@ -1,7 +1,7 @@
 "use client"
 import { cn } from "@/lib/utils"
 import { IconMenu2, IconX } from "@tabler/icons-react"
-import { motion, AnimatePresence, useScroll, useMotionValueEvent } from "motion/react"
+import { motion, AnimatePresence, useScroll, useMotionValueEvent } from "framer-motion"
 import Image from "next/image"
 import Link from "next/link"
 
@@ -215,7 +215,7 @@ export const MobileNavToggle = ({
 export const NavbarLogo = () => {
   return (
     <Link href="/" className="relative z-20 mr-4 flex items-center space-x-2 px-2 py-1 text-sm font-normal">
-     <div className="flex items-center gap-1 flex-1 justify-start">
+     <div className="flex items-center gap- flex-1 justify-start">
   <div className="relative">
     <Image
       src="https://i.ibb.co/cKpJxnsT/A55-C04-B3-FD56-4367-93-C6-DF68-E80-C9-FC4-1-removebg-preview.png"

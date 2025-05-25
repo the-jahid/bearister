@@ -3,9 +3,9 @@
 
 import type React from "react"
 import { useState, useEffect, useRef, createContext, useContext, type ReactNode } from "react"
-import { Plus, User, Menu, X, Trash2, MoreVertical, Home, Zap } from "lucide-react"
+import { Plus, Menu, X, Trash2, MoreVertical, Home, Zap } from "lucide-react"
 import Image from "next/image"
-import { div } from "motion/react-client"
+
 import Link from "next/link"
 import { UserButton } from "@clerk/nextjs"
 
