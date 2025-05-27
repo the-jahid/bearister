@@ -22,14 +22,14 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Badge } from "@/components/ui/badge"
 import { useEffect, useState } from "react"
 import { loadStripe } from "@stripe/stripe-js"
-import { useRouter } from "next/navigation"
+
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
 
 export default function PricingPage() {
   const [isVisible, setIsVisible] = useState(false)
   const [loading, setLoading] = useState<string | null>(null)
-  const router = useRouter()
+  
 
   useEffect(() => {
     setIsVisible(true)
@@ -180,7 +180,7 @@ export default function PricingPage() {
 
         {/* Pricing Cards */}
         <div className="grid md:grid-cols-3 gap-8 max-w-7xl mx-auto mb-20">
-          {plans.map((plan, index) => {
+          {plans.map((plan) => {
             const IconComponent = plan.icon
             return (
               <Card
