@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
 
     console.log(`Updating user ${userId} to plan ${planType}`)
 
-    // Update the user's plan using PATCH method as specified
+    // Update the user's plan using PATCH method
     const response = await fetch(`https://bearister-server.onrender.com/api/v1/users/${userId}`, {
       method: "PATCH",
       headers: {

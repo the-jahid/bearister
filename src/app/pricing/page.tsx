@@ -74,8 +74,8 @@ export default function PricingPage() {
       }
 
       if (isFree) {
-        // Handle free tier signup - redirect to registration or dashboard
-        router.push("/signup?plan=free")
+        // For free tier, redirect to dashboard
+        router.push("/dashboard")
         return
       }
 
@@ -112,7 +112,7 @@ export default function PricingPage() {
 
   const getCurrentPlanType = (planName: string): string => {
     const planMapping: Record<string, string> = {
-      Free: "BASIC",
+      Basic: "BASIC",
       Core: "CORE",
       Advanced: "ADVANCED",
       Pro: "PRO",
@@ -127,7 +127,7 @@ export default function PricingPage() {
 
   const plans = [
     {
-      name: "Free",
+      name: "Basic",
       price: "$0",
       priceId: "free",
       period: "/month",
@@ -135,11 +135,11 @@ export default function PricingPage() {
       icon: Scale,
       features: [
         "20 messages per month",
-        "Basic legal research assistance",
+        "Max 4,096 tokens per message",
+        "3 document uploads per month",
         "Simple law student outlines",
         "Case law research",
         "Email support",
-        "Standard response time",
       ],
       buttonText: "Get Started Free",
       popular: false,

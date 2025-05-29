@@ -10,10 +10,10 @@ export async function POST(req: NextRequest) {
     const { priceId } = await req.json()
 
     // Create price mapping for your products
-    const priceMapping: Record<string, { price: number; name: string }> = {
-      price_starter: { price: 2000, name: "Starter Plan" }, // $20.00 in cents
-      price_professional: { price: 4000, name: "Professional Plan" }, // $40.00 in cents
-      price_enterprise: { price: 9900, name: "Enterprise Plan" }, // $99.00 in cents
+    const priceMapping: Record<string, { price: number; name: string; planType: string }> = {
+      price_core: { price: 2000, name: "Core Plan", planType: "CORE" }, // $20.00 in cents
+      price_advanced: { price: 4000, name: "Advanced Plan", planType: "ADVANCED" }, // $40.00 in cents
+      price_pro: { price: 9900, name: "Pro Plan", planType: "PRO" }, // $99.00 in cents
     }
 
     const product = priceMapping[priceId]
@@ -45,10 +45,9 @@ export async function POST(req: NextRequest) {
       cancel_url: `${req.headers.get("origin")}/pricing`,
       metadata: {
         priceId,
+        planType: product.planType,
       },
     })
-
-    
 
     return NextResponse.json({ sessionId: session.id })
   } catch (error) {

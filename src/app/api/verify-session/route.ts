@@ -13,15 +13,27 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Session ID is required" }, { status: 400 })
     }
 
-    const session = await stripe.checkout.sessions.retrieve(sessionId, {
-      expand: ["line_items"],
-    })
+    let session
+    try {
+      session = await stripe.checkout.sessions.retrieve(sessionId, {
+        expand: ["line_items", "line_items.data.price"],
+      })
+    } catch (stripeError) {
+      console.error("Stripe error:", stripeError)
+      return NextResponse.json(
+        {
+          error: "Error retrieving session from Stripe",
+          details: stripeError instanceof Error ? stripeError.message : "Unknown Stripe error",
+        },
+        { status: 500 },
+      )
+    }
 
     // Get the price ID from the session
     let priceId = null
     if (session.line_items && session.line_items.data.length > 0) {
       const item = session.line_items.data[0]
-      if (item.price && typeof item.price === "object") {
+      if (item.price && typeof item.price === "object" && item.price.id) {
         priceId = item.price.id
       }
     }
@@ -39,6 +51,12 @@ export async function GET(req: NextRequest) {
     })
   } catch (error) {
     console.error("Error verifying session:", error)
-    return NextResponse.json({ error: "Error verifying session" }, { status: 500 })
+    return NextResponse.json(
+      {
+        error: "Error verifying session",
+        details: error instanceof Error ? error.message : "Unknown error",
+      },
+      { status: 500 },
+    )
   }
 }

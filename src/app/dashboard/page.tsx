@@ -2,7 +2,7 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect, useRef, createContext, useContext, type ReactNode, use } from "react"
+import { useState, useEffect, useRef, createContext, useContext, type ReactNode } from "react"
 import { Plus, Menu, X, Trash2, MoreVertical, Home, Zap } from "lucide-react"
 import Image from "next/image"
 
@@ -43,7 +43,7 @@ interface FlowiseRequest {
 
 interface MessageLimitContextType {
   messageCount: number
-  incrementMessageCount: () => void
+  incrementMessageCount: () => Promise<void>
   resetMessageCount: () => void
   currentPlan: Plan
   upgradePlan: (plan: Plan) => void
@@ -51,44 +51,44 @@ interface MessageLimitContextType {
   showUpgradeModal: boolean
   setShowUpgradeModal: (show: boolean) => void
   messageLimit: number
+  userData: any
 }
 
 // Context
 const MessageLimitContext = createContext<MessageLimitContextType | undefined>(undefined)
 
 function MessageLimitProvider({ children }: { children: ReactNode }) {
-
   const [messageCount, setMessageCount] = useState(0)
   const [currentPlan, setCurrentPlan] = useState<Plan>("free")
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
 
-  const {userId} = useAuth();
+  const { userId } = useAuth()
 
-  const [userData, setUserData] = useState(null);
+  const [userData, setUserData] = useState(null)
 
   useEffect(() => {
     const fetchUserData = async () => {
       if (userId) {
         try {
-          const response = await fetch(`https://bearister-server.onrender.com/api/v1/users/${userId}`);
+          const response = await fetch(`https://bearister-server.onrender.com/api/v1/users/${userId}`)
           if (response.ok) {
-            const data = await response.json();
-            setUserData(data.data);
-            setCurrentPlan(data.data.planType.toLowerCase());
-            setMessageCount(data.data.messagesUsed);
+            const data = await response.json()
+            setUserData(data.data)
+            setCurrentPlan(data.data.planType.toLowerCase())
+            setMessageCount(data.data.messagesUsed)
           } else {
-            console.error("Failed to fetch user data:", response.status);
+            console.error("Failed to fetch user data:", response.status)
           }
         } catch (error) {
-          console.error("Error fetching user data:", error);
+          console.error("Error fetching user data:", error)
         }
       }
-    };
+    }
 
-    fetchUserData();
-  }, [userId]);
+    fetchUserData()
+  }, [userId])
 
-  console.log("User Data:", userData);
+  console.log("User Data:", userData)
 
   // Load message count and plan from localStorage on component mount
   useEffect(() => {
@@ -110,14 +110,77 @@ function MessageLimitProvider({ children }: { children: ReactNode }) {
     localStorage.setItem("currentPlan", currentPlan)
   }, [messageCount, currentPlan])
 
+  const incrementMessageCount = async () => {
+    if (userId) {
+      try {
+        console.log("Incrementing message count for user:", userId)
+
+        // Call the API to increment message count - exactly once per message
+        const response = await fetch(`https://bearister-server.onrender.com/api/v1/users/${userId}`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            incrementMessage: true,
+          }),
+        })
+
+        if (response.ok) {
+          const data = await response.json()
+          console.log("Message increment successful:", data)
+
+          // Update local state with the returned data
+          setUserData(data.data)
+          setCurrentPlan(data.data.planType.toLowerCase())
+          setMessageCount(data.data.messagesUsed)
+
+          // Check if limit is exceeded and show upgrade modal
+          if (data.data.messageLeft <= 0 && data.data.planType.toLowerCase() === "free") {
+            setShowUpgradeModal(true)
+          }
+        } else {
+          console.error("Failed to increment message count:", response.status)
+          // Fallback to local increment if API fails
+          const newCount = messageCount + 1
+          setMessageCount(newCount)
+          if (newCount >= messageLimit && currentPlan === "free") {
+            setShowUpgradeModal(true)
+          }
+        }
+      } catch (error) {
+        console.error("Error incrementing message count:", error)
+        // Fallback to local increment if API fails
+        const newCount = messageCount + 1
+        setMessageCount(newCount)
+        if (newCount >= messageLimit && currentPlan === "free") {
+          setShowUpgradeModal(true)
+        }
+      }
+    } else {
+      // Fallback for when userId is not available
+      const newCount = messageCount + 1
+      setMessageCount(newCount)
+      if (newCount >= messageLimit && currentPlan === "free") {
+        setShowUpgradeModal(true)
+      }
+    }
+  }
+
   const getPlanLimit = (plan: Plan): number => {
+    // If we have userData from API, use the actual total limit
+    if (userData) {
+      return userData.messagesUsed + userData.messageLeft
+    }
+
+    // Fallback to default limits
     switch (plan) {
       case "free":
         return 20
       case "starter":
         return 100
       case "professional":
-        return 500
+        return 1500
       case "enterprise":
         return Number.POSITIVE_INFINITY
       default:
@@ -126,16 +189,7 @@ function MessageLimitProvider({ children }: { children: ReactNode }) {
   }
 
   const messageLimit = getPlanLimit(currentPlan)
-  const isLimitExceeded = messageCount >= messageLimit
-
-  const incrementMessageCount = () => {
-    const newCount = messageCount + 1
-    setMessageCount(newCount)
-
-    if (newCount >= messageLimit && currentPlan === "free") {
-      setShowUpgradeModal(true)
-    }
-  }
+  const isLimitExceeded = userData ? userData.messageLeft <= 0 : messageCount >= messageLimit
 
   const resetMessageCount = () => {
     setMessageCount(0)
@@ -158,6 +212,7 @@ function MessageLimitProvider({ children }: { children: ReactNode }) {
         showUpgradeModal,
         setShowUpgradeModal,
         messageLimit,
+        userData,
       }}
     >
       {children}
@@ -175,7 +230,9 @@ function useMessageLimit() {
 
 // Components
 function UpgradeModal() {
-  const { showUpgradeModal, setShowUpgradeModal, messageLimit } = useMessageLimit()
+  const { showUpgradeModal, setShowUpgradeModal, userData } = useMessageLimit()
+
+  const totalMessages = userData ? userData.messagesUsed + userData.messageLeft : 20
 
   return (
     <>
@@ -241,10 +298,10 @@ function UpgradeModal() {
                 margin: "0 0 20px 0",
               }}
             >
-              You&#39;ve reached your free plan limit of {messageLimit} messages. Upgrade your plan to continue the
-              conversation.
+              You&#39;ve used all {totalMessages} messages in your current plan. Upgrade to continue the conversation.
             </p>
 
+            {/* Rest of the modal content remains the same */}
             <div
               style={{
                 backgroundColor: "#374151",
@@ -372,7 +429,7 @@ function UpgradeModal() {
 }
 
 function PlanBadge() {
-  const { currentPlan, messageCount, messageLimit } = useMessageLimit()
+  const { currentPlan, messageCount, messageLimit, userData } = useMessageLimit()
 
   const getPlanColor = () => {
     switch (currentPlan) {
@@ -393,6 +450,11 @@ function PlanBadge() {
     return currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1)
   }
 
+  // Use API data if available, otherwise fall back to local state
+  const displayMessageCount = userData ? userData.messagesUsed : messageCount
+  const displayMessageLeft = userData ? userData.messageLeft : messageLimit - messageCount
+  const totalMessages = userData ? userData.messagesUsed + userData.messageLeft : messageLimit
+
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "end", gap: "4px" }}>
       <div
@@ -411,7 +473,7 @@ function PlanBadge() {
         {getPlanName()} Plan
       </div>
       <span style={{ fontSize: "10px", color: "#9ca3af" }}>
-        {messageCount}/{messageLimit === Number.POSITIVE_INFINITY ? "∞" : messageLimit} messages
+        {displayMessageLeft}/{totalMessages === Number.POSITIVE_INFINITY ? "∞" : totalMessages} messages
       </span>
     </div>
   )
@@ -690,8 +752,8 @@ function ChatView() {
           }
           setMessages((prev) => [...prev, aiMessage])
 
-          // Increment message count after successful response
-          incrementMessageCount()
+          // Increment message count exactly once after successful response
+          await incrementMessageCount()
         } else {
           const errorMessage: Message = {
             role: "assistant",
@@ -699,6 +761,7 @@ function ChatView() {
             timestamp: new Date().toISOString(),
           }
           setMessages((prev) => [...prev, errorMessage])
+          // Do NOT increment message count for error responses
         }
       } catch (error) {
         console.error("Error calling Flowise API:", error)
@@ -708,6 +771,7 @@ function ChatView() {
           timestamp: new Date().toISOString(),
         }
         setMessages((prev) => [...prev, errorMessage])
+        // Do NOT increment message count for error responses
       } finally {
         setIsLoading(false)
       }
@@ -724,7 +788,7 @@ function ChatView() {
     setActiveChat(newChatId)
     const welcomeMessage: Message = {
       role: "assistant",
-     content: `Hello! I'm Defender CoPilot, your AI legal assistant focused on California criminal defense. I'm here to help you with case analysis, defense strategies, jury instructions, and practical tools to support your work defending clients.
+      content: `Hello! I'm Defender CoPilot, your AI legal assistant focused on California criminal defense. I'm here to help you with case analysis, defense strategies, jury instructions, and practical tools to support your work defending clients.
 
 Whether you need help with:
 - Analyzing a case for potential defenses
@@ -1416,7 +1480,6 @@ Sometimes the most important ships you guide home carry friendship aboard.`,
                       height={30}
                       style={{ borderRadius: "50%" }}
                     />
-
                   </div>
                 </div>
                 <h1
@@ -1456,7 +1519,10 @@ Sometimes the most important ships you guide home carry friendship aboard.`,
                     e.currentTarget.style.backgroundColor = "#1a1a2e"
                   }}
                 >
-                 <Link href={'/'} > <Home style={{ width: responsive.iconSize.button, height: responsive.iconSize.button }} /></Link>
+                  <Link href={"/"}>
+                    {" "}
+                    <Home style={{ width: responsive.iconSize.button, height: responsive.iconSize.button }} />
+                  </Link>
                 </button>
 
                 <button
@@ -1578,14 +1644,14 @@ Sometimes the most important ships you guide home carry friendship aboard.`,
                   </div>
                 ))}
                 {isLoading && (
-                  <div className="animate-bounce" >
+                  <div className="animate-bounce">
                     <Image
-                        src="https://i.ibb.co/cKpJxnsT/A55-C04-B3-FD56-4367-93-C6-DF68-E80-C9-FC4-1-removebg-preview.png"
-                        alt="Thinking BearisterAI Logo"   
-                        width={40}
-                        height={40}
-                        style={{ borderRadius: "50%", marginRight: "8px" }}
-                        />
+                      src="https://i.ibb.co/cKpJxnsT/A55-C04-B3-FD56-4367-93-C6-DF68-E80-C9-FC4-1-removebg-preview.png"
+                      alt="Thinking BearisterAI Logo"
+                      width={40}
+                      height={40}
+                      style={{ borderRadius: "50%", marginRight: "8px" }}
+                    />
                   </div>
                 )}
                 <div ref={messagesEndRef} />
