@@ -51,6 +51,7 @@ interface MessageLimitContextType {
   showUpgradeModal: boolean
   setShowUpgradeModal: (show: boolean) => void
   messageLimit: number
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   userData: any
 }
 
@@ -64,7 +65,13 @@ function MessageLimitProvider({ children }: { children: ReactNode }) {
 
   const { userId } = useAuth()
 
-  const [userData, setUserData] = useState(null)
+  interface UserData {
+    planType: string
+    messagesUsed: number
+    messageLeft: number
+    [key: string]: unknown
+  }
+  const [userData, setUserData] = useState<UserData | null>(null)
 
   useEffect(() => {
     const fetchUserData = async () => {
