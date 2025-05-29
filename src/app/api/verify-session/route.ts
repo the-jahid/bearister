@@ -29,25 +29,32 @@ export async function GET(req: NextRequest) {
       )
     }
 
-    // Get the price ID from the session
-    let priceId = null
-    if (session.line_items && session.line_items.data.length > 0) {
+    // Get the price ID from metadata first (most reliable)
+    let priceId = session.metadata?.priceId || null
+    const planType = session.metadata?.planType || null
+
+    // If we couldn't get the price ID from metadata, try to get it from line items
+    if (!priceId && session.line_items && session.line_items.data.length > 0) {
       const item = session.line_items.data[0]
       if (item.price && typeof item.price === "object" && item.price.id) {
         priceId = item.price.id
       }
     }
 
-    // If we couldn't get the price ID directly, try to get it from metadata
-    if (!priceId && session.metadata && session.metadata.priceId) {
-      priceId = session.metadata.priceId
-    }
+    console.log("Session verification:", {
+      sessionId,
+      priceId,
+      planType,
+      amount: session.amount_total,
+      metadata: session.metadata,
+    })
 
     return NextResponse.json({
       status: session.status,
       customer_email: session.customer_details?.email,
       amount_total: session.amount_total,
       priceId: priceId,
+      planType: planType,
     })
   } catch (error) {
     console.error("Error verifying session:", error)

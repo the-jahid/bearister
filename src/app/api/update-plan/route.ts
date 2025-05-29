@@ -16,14 +16,14 @@ export async function POST(req: NextRequest) {
     }
 
     // Validate plan type
-    const validPlanTypes = ["BASIC", "CORE", "ADVANCED", "PRO"]
+    const validPlanTypes = ["CORE", "ADVANCED", "PRO"]
     if (!validPlanTypes.includes(planType)) {
       return NextResponse.json({ error: "Invalid plan type" }, { status: 400 })
     }
 
     console.log(`Updating user ${userId} to plan ${planType}`)
 
-    // Update the user's plan using PATCH method
+    // Update the user's plan using PATCH method to your backend
     const response = await fetch(`https://bearister-server.onrender.com/api/v1/users/${userId}`, {
       method: "PATCH",
       headers: {
@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
       try {
         const errorData = await response.json()
         errorMessage = errorData.message || errorData.error || errorMessage
-        console.error("API Error Response:", errorData)
+        console.error("Backend API Error Response:", errorData)
       } catch (e) {
         errorMessage = `${errorMessage}: ${response.statusText}`
       }
@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         {
           error: errorMessage,
-          details: `Server responded with ${response.status}`,
+          details: `Backend server responded with ${response.status}`,
         },
         { status: 500 },
       )
@@ -58,6 +58,7 @@ export async function POST(req: NextRequest) {
     let data
     try {
       data = await response.json()
+      console.log("Backend response:", data)
     } catch (e) {
       // If we can't parse JSON but the request was successful
       data = { success: true, message: "Plan updated successfully" }

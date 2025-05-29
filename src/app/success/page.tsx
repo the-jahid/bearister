@@ -1,5 +1,3 @@
-/* eslint-disable react-hooks/exhaustive-deps */
-/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client"
 
 import { useEffect, useState } from "react"
@@ -14,6 +12,7 @@ interface SessionData {
   customer_email: string
   amount_total: number
   priceId?: string
+  planType?: string
 }
 
 export default function SuccessPage() {
@@ -64,7 +63,7 @@ export default function SuccessPage() {
       }
 
       const sessionData = await sessionResponse.json()
-      console.log("Session data:", sessionData)
+      console.log("Session data received:", sessionData)
       setSession(sessionData)
       setLoading(false)
 
@@ -84,9 +83,15 @@ export default function SuccessPage() {
       setUpdating(true)
       setUpdateDetails("Determining plan type...")
 
-      // Get the plan type based on the price ID or amount
+      // Get the plan type from session metadata or derive from price/amount
       const planType = getPlanTypeFromSession(sessionData)
       console.log("Determined plan type:", planType)
+      
+      if (!planType || planType === "BASIC") {
+        setError("Invalid plan type for paid subscription")
+        return
+      }
+
       setUpdateDetails(`Updating to ${planType} plan...`)
 
       // Call your API to update the user's plan
@@ -111,6 +116,12 @@ export default function SuccessPage() {
 
       setSuccess(true)
       setUpdateDetails("Plan updated successfully!")
+      
+      // Wait a moment then redirect to dashboard
+      setTimeout(() => {
+        router.push("/dashboard")
+      }, 3000)
+
     } catch (error) {
       console.error("Error updating user plan:", error)
       setError(`Failed to update subscription: ${error instanceof Error ? error.message : "Unknown error"}`)
@@ -122,11 +133,17 @@ export default function SuccessPage() {
   const getPlanTypeFromSession = (sessionData: SessionData): string => {
     console.log("Getting plan type from session:", sessionData)
 
+    // First try to get plan type from metadata (most reliable)
+    if (sessionData.planType) {
+      console.log("Plan type from metadata:", sessionData.planType)
+      return sessionData.planType
+    }
+
     // Map price IDs to plan types
     if (sessionData.priceId) {
       const priceMapping: Record<string, string> = {
         price_core: "CORE",
-        price_advanced: "ADVANCED",
+        price_advanced: "ADVANCED", 
         price_pro: "PRO",
       }
       const planType = priceMapping[sessionData.priceId]
@@ -143,7 +160,8 @@ export default function SuccessPage() {
     if (amount >= 9900) return "PRO" // $99.00
     if (amount >= 4000) return "ADVANCED" // $40.00
     if (amount >= 2000) return "CORE" // $20.00
-    return "BASIC"
+    
+    return "BASIC" // This shouldn't happen for paid plans
   }
 
   if (!isLoaded) {
@@ -234,6 +252,7 @@ export default function SuccessPage() {
             <div className="mb-8 p-4 bg-green-500/10 rounded-lg border border-green-500/30">
               <p className="text-green-400 font-medium">✓ Your subscription has been activated</p>
               <p className="text-green-300 text-sm mt-1">You can now access all features of your plan</p>
+              <p className="text-green-300 text-sm mt-1">Redirecting to dashboard in a few seconds...</p>
             </div>
           )}
 
@@ -252,6 +271,6 @@ export default function SuccessPage() {
           </div>
         </div>
       </div>
-    </div>
-  )
+    );
+  }
 }
