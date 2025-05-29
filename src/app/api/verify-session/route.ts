@@ -13,12 +13,29 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Session ID is required" }, { status: 400 })
     }
 
-    const session = await stripe.checkout.sessions.retrieve(sessionId)
+    const session = await stripe.checkout.sessions.retrieve(sessionId, {
+      expand: ["line_items"],
+    })
+
+    // Get the price ID from the session
+    let priceId = null
+    if (session.line_items && session.line_items.data.length > 0) {
+      const item = session.line_items.data[0]
+      if (item.price && typeof item.price === "object") {
+        priceId = item.price.id
+      }
+    }
+
+    // If we couldn't get the price ID directly, try to get it from metadata
+    if (!priceId && session.metadata && session.metadata.priceId) {
+      priceId = session.metadata.priceId
+    }
 
     return NextResponse.json({
       status: session.status,
       customer_email: session.customer_details?.email,
       amount_total: session.amount_total,
+      priceId: priceId,
     })
   } catch (error) {
     console.error("Error verifying session:", error)

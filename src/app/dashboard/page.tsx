@@ -2,12 +2,12 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect, useRef, createContext, useContext, type ReactNode } from "react"
+import { useState, useEffect, useRef, createContext, useContext, type ReactNode, use } from "react"
 import { Plus, Menu, X, Trash2, MoreVertical, Home, Zap } from "lucide-react"
 import Image from "next/image"
 
 import Link from "next/link"
-import { UserButton } from "@clerk/nextjs"
+import { useAuth, UserButton } from "@clerk/nextjs"
 
 // Types
 type Plan = "free" | "starter" | "professional" | "enterprise"
@@ -57,9 +57,38 @@ interface MessageLimitContextType {
 const MessageLimitContext = createContext<MessageLimitContextType | undefined>(undefined)
 
 function MessageLimitProvider({ children }: { children: ReactNode }) {
+
   const [messageCount, setMessageCount] = useState(0)
   const [currentPlan, setCurrentPlan] = useState<Plan>("free")
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
+
+  const {userId} = useAuth();
+
+  const [userData, setUserData] = useState(null);
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (userId) {
+        try {
+          const response = await fetch(`https://bearister-server.onrender.com/api/v1/users/${userId}`);
+          if (response.ok) {
+            const data = await response.json();
+            setUserData(data.data);
+            setCurrentPlan(data.data.planType.toLowerCase());
+            setMessageCount(data.data.messagesUsed);
+          } else {
+            console.error("Failed to fetch user data:", response.status);
+          }
+        } catch (error) {
+          console.error("Error fetching user data:", error);
+        }
+      }
+    };
+
+    fetchUserData();
+  }, [userId]);
+
+  console.log("User Data:", userData);
 
   // Load message count and plan from localStorage on component mount
   useEffect(() => {

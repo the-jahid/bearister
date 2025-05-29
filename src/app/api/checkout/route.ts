@@ -48,6 +48,8 @@ export async function POST(req: NextRequest) {
       },
     })
 
+    
+
     return NextResponse.json({ sessionId: session.id })
   } catch (error) {
     console.error("Stripe error:", error)
