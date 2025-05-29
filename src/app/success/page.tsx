@@ -48,6 +48,7 @@ export default function SuccessPage() {
       setError("User not authenticated")
       setLoading(false)
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionId, userId, isLoaded, isSignedIn, router])
 
   const verifyAndUpdatePlan = async () => {

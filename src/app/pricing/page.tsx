@@ -8,6 +8,7 @@ import { useEffect, useState } from "react"
 import { loadStripe } from "@stripe/stripe-js"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@clerk/nextjs"
+import { NavbarDemo } from "@/components/Navbar"
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
 
@@ -233,7 +234,10 @@ export default function PricingPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#0C0C1C] to-black text-white overflow-hidden relative">
+
+ <div className="bg-gradient-to-b from-[#0C0C1C] to-black" >
+    <NavbarDemo  >
+     <div className="min-h-screen bg-gradient-to-b from-[#0C0C1C] to-black text-white overflow-hidden relative">
       {/* Animated background elements */}
       <div className="absolute inset-0">
         <div className="absolute top-20 left-10 w-72 h-72 bg-violet-500/10 rounded-full blur-3xl animate-pulse"></div>
@@ -532,5 +536,7 @@ export default function PricingPage() {
         }
       `}</style>
     </div>
+   </NavbarDemo>
+ </div>
   )
 }

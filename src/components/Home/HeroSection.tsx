@@ -88,8 +88,7 @@ const HeroSection = () => {
           }}
           className="relative z-10 mx-auto max-w-xl py-4 text-center text-lg font-normal text-neutral-600 dark:text-neutral-400"
         >
-          Expert help with criminal defense, powered by artificial intelligence. Get professional legal guidance when
-          you need it most.
+         Meet Obie — your AI co-counsel, powered by BearisterAI. From defense strategy to civil litigation to 1L prep, Obie helps you research, draft, strategize, and stay five steps ahead.
         </motion.p>
 
         {/* <motion.div
