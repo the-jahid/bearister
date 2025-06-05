@@ -176,9 +176,9 @@ export default function PricingPage() {
       description: "Perfect for trying out our AI legal assistant",
       icon: Scale,
       features: [
-        "20 messages per month",
+        "100 messages per month",
         "Max 4,096 tokens per message",
-        "3 document uploads per month",
+        "No document uploads",
         "Simple law student outlines",
         "Case law research",
         "Email support",
@@ -196,9 +196,9 @@ export default function PricingPage() {
       description: "Ideal for law students and solo practitioners",
       icon: Zap,
       features: [
-        "300 messages per month",
+        "250 messages per month",
         "Max 4,096 tokens per message",
-        "10 document uploads per month",
+        "4 document uploads per month",
         "Detailed law student outlines",
         "Case law research",
         "Save past chats/research",
@@ -218,9 +218,9 @@ export default function PricingPage() {
       description: "For growing practices and mid-size firms",
       icon: Crown,
       features: [
-        "700 messages per month",
+        "600 messages per month",
         "Max 4,096 tokens per message",
-        "50 document uploads per month",
+        "12 document uploads per month",
         "Detailed exportable outlines",
         "Case law research",
         "Save past chats/research",
@@ -244,9 +244,9 @@ export default function PricingPage() {
       description: "For large firms requiring maximum capability",
       icon: Crown,
       features: [
-        "1,500 messages per month",
+        "1,000 messages per month",
         "Max 4,096 tokens per message",
-        "Unlimited document uploads",
+        "20 document uploads per month",
         "Detailed exportable outlines",
         "Case law research",
         "Save past chats/research",
@@ -326,7 +326,7 @@ export default function PricingPage() {
 
         {/* Pricing Cards - Improved mobile layout */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 max-w-8xl mx-auto mb-12 sm:mb-20">
-          {plans.map((plan) => {
+          {plans.map((plan, index) => {
             const IconComponent = plan.icon
             const isActive = isCurrentPlan(plan.name)
 
