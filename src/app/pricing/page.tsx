@@ -8,8 +8,7 @@ import { useEffect, useState } from "react"
 import { loadStripe } from "@stripe/stripe-js"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@clerk/nextjs"
-import { Navbar } from "@/components/ui/resizable-navbar"
-import { h2 } from "framer-motion/client"
+
 import { NavbarDemo } from "@/components/Navbar"
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
