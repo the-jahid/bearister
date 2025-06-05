@@ -20,7 +20,7 @@ export default function SuccessPage() {
   const sessionId = searchParams.get("session_id")
   const [loading, setLoading] = useState(true)
   const [updating, setUpdating] = useState(false)
-  const [session, setSession] = useState<SessionData | null>(null)
+  const [, setSession] = useState<SessionData | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
   const [updateDetails, setUpdateDetails] = useState<string>("")
