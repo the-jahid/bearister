@@ -7,7 +7,12 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 
 export async function POST(req: NextRequest) {
   try {
-    const { priceId } = await req.json()
+    console.log("Checkout API called")
+
+    const body = await req.json()
+    const { priceId } = body
+
+    console.log("Received priceId:", priceId)
 
     // Create price mapping for your products
     const priceMapping: Record<string, { price: number; name: string; planType: string }> = {
@@ -18,8 +23,19 @@ export async function POST(req: NextRequest) {
 
     const product = priceMapping[priceId]
     if (!product) {
+      console.error("Invalid price ID:", priceId)
       return NextResponse.json({ error: "Invalid price ID" }, { status: 400 })
     }
+
+    console.log("Creating Stripe session for product:", product)
+
+    // Get the origin from headers with fallback
+    const origin =
+      req.headers.get("origin") ||
+      req.headers.get("referer")?.split("/").slice(0, 3).join("/") ||
+      "https://your-domain.com"
+
+    console.log("Using origin:", origin)
 
     // Create Checkout Session
     const session = await stripe.checkout.sessions.create({
@@ -41,17 +57,30 @@ export async function POST(req: NextRequest) {
         },
       ],
       mode: "subscription",
-      success_url: `${req.headers.get("origin")}/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${req.headers.get("origin")}/pricing`,
+      success_url: `${origin}/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${origin}/pricing`,
       metadata: {
         priceId,
         planType: product.planType,
       },
+      // Add mobile-friendly settings
+      billing_address_collection: "auto",
+      phone_number_collection: {
+        enabled: false,
+      },
     })
+
+    console.log("Stripe session created:", session.id)
 
     return NextResponse.json({ sessionId: session.id })
   } catch (error) {
     console.error("Stripe error:", error)
-    return NextResponse.json({ error: "Error creating checkout session" }, { status: 500 })
+    return NextResponse.json(
+      {
+        error: "Error creating checkout session",
+        details: error instanceof Error ? error.message : "Unknown error",
+      },
+      { status: 500 },
+    )
   }
 }

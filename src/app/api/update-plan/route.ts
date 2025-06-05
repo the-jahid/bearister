@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { type NextRequest, NextResponse } from "next/server"
 
 interface UpdatePlanRequest {
@@ -10,6 +9,8 @@ interface UpdatePlanRequest {
 export async function POST(req: NextRequest) {
   try {
     const { userId, planType, sessionId } = (await req.json()) as UpdatePlanRequest
+
+    console.log("Update plan request:", { userId, planType, sessionId })
 
     if (!userId || !planType) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 })

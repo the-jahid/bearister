@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client"
 
 import { useEffect, useState } from "react"
@@ -13,7 +12,6 @@ interface SessionData {
   customer_email: string
   amount_total: number
   priceId?: string
-  planType?: string
 }
 
 export default function SuccessPage() {
@@ -29,12 +27,25 @@ export default function SuccessPage() {
   const { userId, isSignedIn, isLoaded } = useAuth()
 
   useEffect(() => {
+    console.log(
+      "Success page loaded, sessionId:",
+      sessionId,
+      "userId:",
+      userId,
+      "isSignedIn:",
+      isSignedIn,
+      "isLoaded:",
+      isLoaded,
+    )
+
     // Wait for auth to load before proceeding
     if (!isLoaded) return
 
     // If user is not signed in, redirect to sign in
     if (isLoaded && !isSignedIn) {
-      router.push("/sign-in?redirect_url=" + encodeURIComponent(`/success?session_id=${sessionId}`))
+      const redirectUrl = `/sign-in?redirect_url=${encodeURIComponent(`/success?session_id=${sessionId}`)}`
+      console.log("User not signed in, redirecting to:", redirectUrl)
+      router.push(redirectUrl)
       return
     }
 
@@ -48,7 +59,6 @@ export default function SuccessPage() {
       setError("User not authenticated")
       setLoading(false)
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionId, userId, isLoaded, isSignedIn, router])
 
   const verifyAndUpdatePlan = async () => {
@@ -65,7 +75,7 @@ export default function SuccessPage() {
       }
 
       const sessionData = await sessionResponse.json()
-      console.log("Session data received:", sessionData)
+      console.log("Session data:", sessionData)
       setSession(sessionData)
       setLoading(false)
 
@@ -85,15 +95,9 @@ export default function SuccessPage() {
       setUpdating(true)
       setUpdateDetails("Determining plan type...")
 
-      // Get the plan type from session metadata or derive from price/amount
+      // Get the plan type based on the price ID or amount
       const planType = getPlanTypeFromSession(sessionData)
       console.log("Determined plan type:", planType)
-      
-      if (!planType || planType === "BASIC") {
-        setError("Invalid plan type for paid subscription")
-        return
-      }
-
       setUpdateDetails(`Updating to ${planType} plan...`)
 
       // Call your API to update the user's plan
@@ -118,12 +122,6 @@ export default function SuccessPage() {
 
       setSuccess(true)
       setUpdateDetails("Plan updated successfully!")
-      
-      // Wait a moment then redirect to dashboard
-      setTimeout(() => {
-        router.push("/dashboard")
-      }, 3000)
-
     } catch (error) {
       console.error("Error updating user plan:", error)
       setError(`Failed to update subscription: ${error instanceof Error ? error.message : "Unknown error"}`)
@@ -135,17 +133,11 @@ export default function SuccessPage() {
   const getPlanTypeFromSession = (sessionData: SessionData): string => {
     console.log("Getting plan type from session:", sessionData)
 
-    // First try to get plan type from metadata (most reliable)
-    if (sessionData.planType) {
-      console.log("Plan type from metadata:", sessionData.planType)
-      return sessionData.planType
-    }
-
-    // Map price IDs to plan types
+    // Map price IDs to plan types (only paid plans, no BASIC for free tier)
     if (sessionData.priceId) {
       const priceMapping: Record<string, string> = {
         price_core: "CORE",
-        price_advanced: "ADVANCED", 
+        price_advanced: "ADVANCED",
         price_pro: "PRO",
       }
       const planType = priceMapping[sessionData.priceId]
@@ -155,24 +147,25 @@ export default function SuccessPage() {
       }
     }
 
-    // Fallback to amount-based mapping
+    // Fallback to amount-based mapping (only for paid plans)
     const amount = sessionData.amount_total || 0
     console.log("Using amount-based mapping for:", amount)
 
     if (amount >= 9900) return "PRO" // $99.00
     if (amount >= 4000) return "ADVANCED" // $40.00
     if (amount >= 2000) return "CORE" // $20.00
-    
-    return "BASIC" // This shouldn't happen for paid plans
+
+    // This shouldn't happen for Stripe payments, but fallback to CORE
+    return "CORE"
   }
 
   if (!isLoaded) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[#0C0C1C] to-black text-white flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-b from-[#0C0C1C] to-black text-white flex items-center justify-center px-4">
         <div className="text-center">
           <Loader2 className="w-12 h-12 text-violet-400 animate-spin mx-auto mb-4" />
-          <h2 className="text-2xl font-bold">Loading...</h2>
-          <p className="text-gray-400 mt-2">Please wait</p>
+          <h2 className="text-xl sm:text-2xl font-bold">Loading...</h2>
+          <p className="text-gray-400 mt-2 text-sm sm:text-base">Please wait</p>
         </div>
       </div>
     )
@@ -180,11 +173,11 @@ export default function SuccessPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[#0C0C1C] to-black text-white flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-b from-[#0C0C1C] to-black text-white flex items-center justify-center px-4">
         <div className="text-center">
           <Loader2 className="w-12 h-12 text-violet-400 animate-spin mx-auto mb-4" />
-          <h2 className="text-2xl font-bold">Verifying your payment...</h2>
-          <p className="text-gray-400 mt-2">Please wait while we confirm your transaction</p>
+          <h2 className="text-xl sm:text-2xl font-bold">Verifying your payment...</h2>
+          <p className="text-gray-400 mt-2 text-sm sm:text-base">Please wait while we confirm your transaction</p>
         </div>
       </div>
     )
@@ -192,11 +185,11 @@ export default function SuccessPage() {
 
   if (updating) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[#0C0C1C] to-black text-white flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-b from-[#0C0C1C] to-black text-white flex items-center justify-center px-4">
         <div className="text-center">
           <Loader2 className="w-12 h-12 text-green-400 animate-spin mx-auto mb-4" />
-          <h2 className="text-2xl font-bold">Updating your subscription...</h2>
-          <p className="text-gray-400 mt-2">{updateDetails}</p>
+          <h2 className="text-xl sm:text-2xl font-bold">Updating your subscription...</h2>
+          <p className="text-gray-400 mt-2 text-sm sm:text-base">{updateDetails}</p>
         </div>
       </div>
     )
@@ -204,26 +197,29 @@ export default function SuccessPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[#0C0C1C] to-black text-white flex items-center justify-center">
-        <div className="max-w-md w-full mx-auto p-8">
+      <div className="min-h-screen bg-gradient-to-b from-[#0C0C1C] to-black text-white flex items-center justify-center px-4">
+        <div className="max-w-md w-full mx-auto p-6 sm:p-8">
           <div className="text-center">
-            <div className="mb-8 inline-flex items-center justify-center w-20 h-20 rounded-full bg-red-500/20 backdrop-blur-sm border border-red-500/30">
-              <AlertCircle className="w-10 h-10 text-red-400" />
+            <div className="mb-6 sm:mb-8 inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-red-500/20 backdrop-blur-sm border border-red-500/30">
+              <AlertCircle className="w-8 h-8 sm:w-10 sm:h-10 text-red-400" />
             </div>
 
-            <h1 className="text-4xl font-bold mb-4 text-red-400">Something went wrong</h1>
+            <h1 className="text-2xl sm:text-4xl font-bold mb-4 text-red-400">Something went wrong</h1>
 
-            <p className="text-gray-300 mb-8">{error}</p>
+            <p className="text-gray-300 mb-6 sm:mb-8 text-sm sm:text-base">{error}</p>
 
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               <Link href="/dashboard">
-                <Button className="w-full bg-gradient-to-r from-violet-500 to-orange-500 hover:from-violet-600 hover:to-orange-600 text-white">
+                <Button className="w-full bg-gradient-to-r from-violet-500 to-orange-500 hover:from-violet-600 hover:to-orange-600 text-white py-2 sm:py-3 text-sm sm:text-base">
                   Go to Dashboard
                 </Button>
               </Link>
 
               <Link href="/pricing">
-                <Button variant="outline" className="w-full bg-white/10 hover:bg-white/20 text-white border-white/20">
+                <Button
+                  variant="outline"
+                  className="w-full bg-white/10 hover:bg-white/20 text-white border-white/20 py-2 sm:py-3 text-sm sm:text-base"
+                >
                   Return to Pricing
                 </Button>
               </Link>
@@ -235,38 +231,40 @@ export default function SuccessPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#0C0C1C] to-black text-white flex items-center justify-center">
-      <div className="max-w-md w-full mx-auto p-8">
+    <div className="min-h-screen bg-gradient-to-b from-[#0C0C1C] to-black text-white flex items-center justify-center px-4">
+      <div className="max-w-md w-full mx-auto p-6 sm:p-8">
         <div className="text-center">
-          <div className="mb-8 inline-flex items-center justify-center w-20 h-20 rounded-full bg-green-500/20 backdrop-blur-sm border border-green-500/30">
-            <CheckCircle className="w-10 h-10 text-green-400" />
+          <div className="mb-6 sm:mb-8 inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-green-500/20 backdrop-blur-sm border border-green-500/30">
+            <CheckCircle className="w-8 h-8 sm:w-10 sm:h-10 text-green-400" />
           </div>
 
-          <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-violet-400 to-orange-400 bg-clip-text text-transparent">
+          <h1 className="text-2xl sm:text-4xl font-bold mb-4 bg-gradient-to-r from-violet-400 to-orange-400 bg-clip-text text-transparent">
             Payment Successful!
           </h1>
 
-          <p className="text-gray-300 mb-4">
+          <p className="text-gray-300 mb-4 text-sm sm:text-base">
             Thank you for subscribing to BearisterAI. Your payment has been processed successfully.
           </p>
 
           {success && (
-            <div className="mb-8 p-4 bg-green-500/10 rounded-lg border border-green-500/30">
-              <p className="text-green-400 font-medium">✓ Your subscription has been activated</p>
-              <p className="text-green-300 text-sm mt-1">You can now access all features of your plan</p>
-              <p className="text-green-300 text-sm mt-1">Redirecting to dashboard in a few seconds...</p>
+            <div className="mb-6 sm:mb-8 p-3 sm:p-4 bg-green-500/10 rounded-lg border border-green-500/30">
+              <p className="text-green-400 font-medium text-sm sm:text-base">✓ Your subscription has been activated</p>
+              <p className="text-green-300 text-xs sm:text-sm mt-1">You can now access all features of your plan</p>
             </div>
           )}
 
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             <Link href="/dashboard">
-              <Button className="w-full bg-gradient-to-r from-violet-500 to-orange-500 hover:from-violet-600 hover:to-orange-600 text-white">
+              <Button className="w-full bg-gradient-to-r from-violet-500 to-orange-500 hover:from-violet-600 hover:to-orange-600 text-white py-2 sm:py-3 text-sm sm:text-base">
                 Go to Dashboard
               </Button>
             </Link>
 
             <Link href="/pricing">
-              <Button variant="outline" className="w-full bg-white/10 hover:bg-white/20 text-white border-white/20">
+              <Button
+                variant="outline"
+                className="w-full bg-white/10 hover:bg-white/20 text-white border-white/20 py-2 sm:py-3 text-sm sm:text-base"
+              >
                 View Plans
               </Button>
             </Link>
@@ -274,5 +272,5 @@ export default function SuccessPage() {
         </div>
       </div>
     </div>
-  );
+  )
 }
