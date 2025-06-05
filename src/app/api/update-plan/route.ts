@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
         const errorData = await response.json()
         errorMessage = errorData.message || errorData.error || errorMessage
         console.error("Backend API Error Response:", errorData)
-      } catch (e) {
+      } catch {
         errorMessage = `${errorMessage}: ${response.statusText}`
       }
 
@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
     try {
       data = await response.json()
       console.log("Backend response:", data)
-    } catch (e) {
+    } catch {
       // If we can't parse JSON but the request was successful
       data = { success: true, message: "Plan updated successfully" }
     }

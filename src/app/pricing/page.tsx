@@ -326,7 +326,7 @@ export default function PricingPage() {
 
         {/* Pricing Cards - Improved mobile layout */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 max-w-8xl mx-auto mb-12 sm:mb-20">
-          {plans.map((plan, index) => {
+          {plans.map((plan) => {
             const IconComponent = plan.icon
             const isActive = isCurrentPlan(plan.name)
 
